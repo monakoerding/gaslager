@@ -11,9 +11,9 @@
 //       Body (Text): {{message}}
 //       To Email:    {{to_email}}
 //  4. Account → "Public Key" kopieren
-const EMAILJS_PUBLIC_KEY  = 'DEIN_PUBLIC_KEY';
-const EMAILJS_SERVICE_ID  = 'DEIN_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID = 'DEIN_TEMPLATE_ID';
+const EMAILJS_PUBLIC_KEY  = 'mpco4Q9eqZW5qPdz_';
+const EMAILJS_SERVICE_ID  = 'service_5yw7qxm';
+const EMAILJS_TEMPLATE_ID = 'template_pqksn3n';
 const EMAIL_TO            = 'info@uhlenkoeper-camp.de';
 
 // Firebase Firestore – https://console.firebase.google.com/
