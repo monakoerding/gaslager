@@ -1,51 +1,12 @@
 // ============================================================
-// KONFIGURATION – nach Setup ausfüllen
+// KONFIGURATION
 // ============================================================
 
-// EmailJS – https://www.emailjs.com/
-//  1. Kostenloses Konto erstellen
-//  2. "Add New Service" → Other → SMTP:
-//       Host: posteo.de  |  Port: 587  |  TLS: ja
-//       Username: gaslager.app@posteo.de  |  Password: [Posteo-Passwort]
-//  3. "Email Templates" → neues Template, Betreff: "Gaslager Inventur – {{date}}"
-//       Body (Text): {{message}}
-//       To Email:    {{to_email}}
-//  4. Account → "Public Key" kopieren
 const EMAILJS_PUBLIC_KEY  = 'mpco4Q9eqZW5qPdz_';
 const EMAILJS_SERVICE_ID  = 'service_5yw7qxm';
 const EMAILJS_TEMPLATE_ID = 'template_pqksn3n';
 const EMAIL_TO            = 'info@uhlenkoeper-camp.de';
 
-// Firebase Firestore – https://console.firebase.google.com/
-//  1. "Add project" → Web-App hinzufügen → Config unten eintragen
-//  2. Build → Firestore Database → "Create database" (Production mode)
-//  3. Rules-Tab → ersetzen durch:
-//       rules_version = '2';
-//       service cloud.firestore {
-//         match /databases/{database}/documents {
-//           match /{document=**} { allow read, write: if true; }
-//         }
-//       }
-//  4. Publish
-const FIREBASE_CONFIG = {
-  apiKey:            'DEIN_API_KEY',
-  authDomain:        'DEIN_PROJEKT.firebaseapp.com',
-  projectId:         'DEIN_PROJEKT_ID',
-  storageBucket:     'DEIN_PROJEKT.appspot.com',
-  messagingSenderId: 'DEINE_SENDER_ID',
-  appId:             'DEINE_APP_ID',
-};
-
-// ============================================================
-// FIREBASE IMPORTS
-// ============================================================
-
-import { initializeApp }                           from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, addDoc,
-         getDocs, orderBy, query }                 from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-const firebaseApp = initializeApp(FIREBASE_CONFIG);
-const db          = getFirestore(firebaseApp);
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
 // ============================================================
@@ -59,7 +20,6 @@ const COLORS = {
   schwarz:{ main: '#374151', shadow: '#1f2937', cap: '#030712', hi: 'rgba(255,255,255,0.07)' },
 };
 
-// Proportionen: h=Körperhöhe in px, rx=halbe Breite
 const SIZES = {
   '33kg':  { h: 152, rx: 28 },
   '11kg':  { h: 108, rx: 24 },
@@ -81,6 +41,8 @@ const ITEMS = [
   { id: 'leer_82_schwarz', section: 'Leer', label: '8,2 kg Schwarz',color: 'schwarz',size: '8.2kg' },
   { id: 'leer_5_grau',     section: 'Leer', label: '5 kg Grau',     color: 'grau',   size: '5kg'   },
 ];
+
+const STORAGE_KEY = 'gaslager_history';
 
 // ============================================================
 // STATE
@@ -104,21 +66,13 @@ function cylinderSVG(colorKey, sizeKey) {
   const maxPx  = Math.min(totalH * 1.15, 195);
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 ${totalH}" style="height:${maxPx}px;width:auto">
-    <!-- Ventilgriff -->
     <rect x="${cx - 15}" y="4" width="30" height="7" rx="3.5" fill="#6b7280"/>
-    <!-- Ventilschaft -->
     <rect x="${cx - 6}" y="8" width="12" height="24" rx="3" fill="#4b5563"/>
-    <!-- Obere Kappe -->
     <ellipse cx="${cx}" cy="${topY}" rx="${rx}" ry="${ry}" fill="${c.cap}"/>
-    <!-- Schatten-Streifen links -->
     <rect x="${cx - rx}" y="${topY}" width="13" height="${h}" fill="${c.shadow}"/>
-    <!-- Hauptkörper -->
     <rect x="${cx - rx + 13}" y="${topY}" width="${rx * 2 - 13}" height="${h}" fill="${c.main}"/>
-    <!-- Glanzstreifen -->
     <rect x="${cx - rx + 3}" y="${topY + 10}" width="7" height="${h - 20}" rx="3.5" fill="${c.hi}"/>
-    <!-- Untere Fläche -->
     <ellipse cx="${cx}" cy="${topY + h}" rx="${rx}" ry="${ry}" fill="${c.shadow}"/>
-    <!-- Sockelring -->
     <rect x="${cx - rx - 3}" y="${topY + h - ry}" width="${rx * 2 + 6}" height="${ry + 13}" rx="3" fill="${c.cap}"/>
     <ellipse cx="${cx}" cy="${topY + h + 13}" rx="${rx + 3}" ry="${Math.round(ry * 0.65)}" fill="${c.cap}"/>
   </svg>`;
@@ -146,8 +100,8 @@ document.getElementById('btn-start').addEventListener('click', () => {
   showScreen('screen-count');
 });
 
-document.getElementById('btn-history').addEventListener('click', async () => {
-  await loadHistory();
+document.getElementById('btn-history').addEventListener('click', () => {
+  loadHistory();
   renderHistoryList();
   showScreen('screen-history');
 });
@@ -218,10 +172,10 @@ function renderSummaryInto(container, countsData) {
     container.appendChild(title);
 
     ITEMS.filter(i => i.section === sec).forEach(item => {
-      const row       = document.createElement('div');
-      row.className   = 'summary-row';
-      row.innerHTML   = `<span class="summary-row-label">${item.label}</span>
-                         <span class="summary-row-count">${countsData[item.id] ?? 0}</span>`;
+      const row     = document.createElement('div');
+      row.className = 'summary-row';
+      row.innerHTML = `<span class="summary-row-label">${item.label}</span>
+                       <span class="summary-row-count">${countsData[item.id] ?? 0}</span>`;
       container.appendChild(row);
     });
   });
@@ -243,12 +197,8 @@ document.getElementById('btn-send').addEventListener('click', async () => {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
 
-    // In Firebase speichern
-    await addDoc(collection(db, 'inventories'), {
-      date:      dateStr,
-      timestamp: Date.now(),
-      counts:    { ...counts },
-    });
+    // In localStorage speichern
+    saveToHistory({ date: dateStr, timestamp: Date.now(), counts: { ...counts } });
 
     // E-Mail senden
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
@@ -281,19 +231,17 @@ function buildEmailText(dateStr, countsData) {
 }
 
 // ============================================================
-// HISTORY
+// HISTORY (localStorage)
 // ============================================================
 
-async function loadHistory() {
-  try {
-    const q    = query(collection(db, 'inventories'), orderBy('timestamp', 'desc'));
-    const snap = await getDocs(q);
-    historyEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  } catch (err) {
-    console.error(err);
-    historyEntries = [];
-    showToast('Verlauf konnte nicht geladen werden.');
-  }
+function saveToHistory(entry) {
+  const existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  existing.unshift(entry);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+}
+
+function loadHistory() {
+  historyEntries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 }
 
 function renderHistoryList() {
@@ -306,10 +254,10 @@ function renderHistoryList() {
   }
 
   historyEntries.forEach(entry => {
-    const card       = document.createElement('div');
-    card.className   = 'history-card';
-    card.innerHTML   = `<span class="history-card-date">${entry.date}</span>
-                        <span class="history-card-arrow">&#8250;</span>`;
+    const card     = document.createElement('div');
+    card.className = 'history-card';
+    card.innerHTML = `<span class="history-card-date">${entry.date}</span>
+                      <span class="history-card-arrow">&#8250;</span>`;
     card.addEventListener('click', () => {
       document.getElementById('detail-title').textContent = entry.date;
       renderSummaryInto(document.getElementById('detail-body'), entry.counts);
@@ -327,7 +275,7 @@ document.getElementById('detail-back').addEventListener('click', () => showScree
 // ============================================================
 
 function showToast(msg) {
-  const t     = document.getElementById('toast');
+  const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
