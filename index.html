@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Gaslager</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+
+  <!-- HOME -->
+  <div id="screen-home" class="screen active">
+    <div class="home-inner">
+      <h1 class="logo">Gaslager</h1>
+      <button id="btn-start" class="btn-huge">Jetzt zählen</button>
+      <button id="btn-history" class="btn-ghost">Letzte</button>
+    </div>
+  </div>
+
+  <!-- COUNT -->
+  <div id="screen-count" class="screen">
+    <div class="count-top">
+      <button class="btn-back" id="count-back">&#8592;</button>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+        <span id="progress-label" class="progress-label">1 / 12</span>
+      </div>
+    </div>
+    <div class="count-body">
+      <div id="section-badge" class="section-badge">VOLL</div>
+      <h2 id="item-title" class="item-title">33 kg Rot</h2>
+      <div id="cylinder-wrap" class="cylinder-wrap"></div>
+      <div class="counter-row">
+        <button id="btn-minus" class="counter-btn">&#8722;</button>
+        <span id="counter-val" class="counter-val">0</span>
+        <button id="btn-plus" class="counter-btn">+</button>
+      </div>
+    </div>
+    <div class="count-bottom">
+      <button id="btn-next" class="btn-next">Weiter &#8594;</button>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div id="screen-summary" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" id="summary-back">&#8592;</button>
+      <h2>Übersicht</h2>
+    </div>
+    <div id="summary-body" class="summary-body"></div>
+    <div class="screen-footer">
+      <button id="btn-send" class="btn-huge">Fertig, senden</button>
+    </div>
+  </div>
+
+  <!-- HISTORY LIST -->
+  <div id="screen-history" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" id="history-back">&#8592;</button>
+      <h2>Letzte</h2>
+    </div>
+    <div id="history-body" class="history-body"></div>
+  </div>
+
+  <!-- HISTORY DETAIL -->
+  <div id="screen-history-detail" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" id="detail-back">&#8592;</button>
+      <h2 id="detail-title"></h2>
+    </div>
+    <div id="detail-body" class="summary-body"></div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
