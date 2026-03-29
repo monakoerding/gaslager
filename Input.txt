@@ -1,0 +1,24 @@
+Dieser Ordner soll auf GitHub ein Projektordner sein, damit du selbstständig pushen kannst. Es soll eine Web-App entwickelt werden, die als solche über GitHub Pages gehostet werden kann.
+Die App ist für die regelmäßige Inventarisierung von Gasflaschen durch einen Hausmeister gedacht.
+Home Screen: Großer Button "Jetzt zählen" und kleinerer Button "Letzte"
+Die folgenden Gasflaschen werden in einem Vorgang gezählt:
+1. Voll:
+- 33 kg Rot
+- 33 kg Grau
+- 11 kg Alu
+- 11 kg Grau
+- 8,2 kg Schwarz
+- 5 kg Grau
+2. Leer:
+- 33 kg Rot
+- 33 kg Grau
+- 11 kg Alu
+- 11 kg Grau
+- 8,2 kg Schwarz
+- 5 kg Grau
+Für jeden Posten zeigt die App sehr klar: Überschrift (genau so wie geschrieben), Foto (entsprechende Artikel von hoyer recherchieren und Fotos downloaden), Anzal (Counter, recht groß mit plus und minus), Weiter (geht auch als Pfeil)
+Keine Emojis in der App. Man soll immer zurück gehen können zum kontrollieren. Letzter Screen: Übersicht und unten groß "Fertig, senden"
+Bei Klick auf "Fertig, senden" soll die Zählung an info@uhlenkoeper-camp geschickt werden. Schlag einen Weg vor, wie wir das umsetzen können. Vielleicht über eine Email von mir die ich dir gebe? Kann auch einen Account extra dafür erstellen bei Google oder so.
+
+
+In "Letzte" werden die vergangenen Inventarisierungen als einfache Übersichten mit Datum angezeigt.
