@@ -5,7 +5,7 @@
 const EMAILJS_PUBLIC_KEY  = 'mpco4Q9eqZW5qPdz_';
 const EMAILJS_SERVICE_ID  = 'service_5yw7qxm';
 const EMAILJS_TEMPLATE_ID = 'template_pqksn3n';
-const EMAIL_TO            = 'info@uhlenkoeper-camp.de';
+const EMAIL_TO            = 'buero@uhlenkoeper-camp.de';
 
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
@@ -135,6 +135,11 @@ document.getElementById('count-back').addEventListener('click', () => {
   }
 });
 
+document.getElementById('btn-list').addEventListener('click', () => {
+  renderSummaryInto(document.getElementById('summary-body'), counts, true);
+  showScreen('screen-summary');
+});
+
 document.getElementById('btn-minus').addEventListener('click', () => {
   const item = ITEMS[currentStep];
   if (counts[item.id] > 0) {
@@ -154,7 +159,7 @@ document.getElementById('btn-next').addEventListener('click', () => {
     currentStep++;
     renderCountScreen();
   } else {
-    renderSummaryInto(document.getElementById('summary-body'), counts);
+    renderSummaryInto(document.getElementById('summary-body'), counts, true);
     showScreen('screen-summary');
   }
 });
@@ -163,19 +168,26 @@ document.getElementById('btn-next').addEventListener('click', () => {
 // SUMMARY
 // ============================================================
 
-function renderSummaryInto(container, countsData) {
+function renderSummaryInto(container, countsData, clickable = false) {
   container.innerHTML = '';
   ['Voll', 'Leer'].forEach(sec => {
     const title = document.createElement('div');
-    title.className   = 'summary-section-title';
+    title.className   = 'summary-section-title ' + sec.toLowerCase();
     title.textContent = sec === 'Voll' ? 'VOLL' : 'LEER';
     container.appendChild(title);
 
     ITEMS.filter(i => i.section === sec).forEach(item => {
       const row     = document.createElement('div');
-      row.className = 'summary-row';
+      row.className = 'summary-row ' + sec.toLowerCase();
       row.innerHTML = `<span class="summary-row-label">${item.label}</span>
                        <span class="summary-row-count">${countsData[item.id] ?? 0}</span>`;
+      if (clickable) {
+        row.addEventListener('click', () => {
+          currentStep = ITEMS.indexOf(item);
+          renderCountScreen();
+          showScreen('screen-count');
+        });
+      }
       container.appendChild(row);
     });
   });
