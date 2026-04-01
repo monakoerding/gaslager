@@ -89,6 +89,10 @@ html, body {
 }
 .btn-ghost:active { border-color: var(--blue); color: var(--blue); }
 
+/* ── COUNT SCREEN BACKGROUND ────────────────── */
+.count-bg-voll { background: #f0fdf4; }
+.count-bg-leer { background: #fff5f5; }
+
 /* ── COUNT TOP ──────────────────────────────── */
 .count-top {
   display: flex;

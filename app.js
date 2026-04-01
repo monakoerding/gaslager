@@ -121,6 +121,9 @@ function renderCountScreen() {
   badge.textContent = item.section.toUpperCase();
   badge.className   = 'section-badge ' + item.section.toLowerCase();
 
+  const body = document.getElementById('screen-count');
+  body.className = 'screen active count-bg-' + item.section.toLowerCase();
+
   document.getElementById('item-title').textContent  = item.label;
   document.getElementById('cylinder-wrap').innerHTML = cylinderSVG(item.color, item.size);
   document.getElementById('counter-val').textContent = counts[item.id];
