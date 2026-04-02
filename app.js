@@ -13,33 +13,20 @@ emailjs.init(EMAILJS_PUBLIC_KEY);
 // DATA
 // ============================================================
 
-const COLORS = {
-  rot:    { main: '#dc2626', shadow: '#991b1b', cap: '#7f1d1d', hi: 'rgba(255,210,210,0.28)' },
-  grau:   { main: '#9ca3af', shadow: '#6b7280', cap: '#374151', hi: 'rgba(255,255,255,0.22)' },
-  alu:    { main: '#cbd5e1', shadow: '#94a3b8', cap: '#475569', hi: 'rgba(255,255,255,0.38)' },
-  schwarz:{ main: '#374151', shadow: '#1f2937', cap: '#030712', hi: 'rgba(255,255,255,0.07)' },
-};
-
-const SIZES = {
-  '33kg':  { h: 152, rx: 28 },
-  '11kg':  { h: 108, rx: 24 },
-  '8.2kg': { h: 92,  rx: 22 },
-  '5kg':   { h: 76,  rx: 19 },
-};
 
 const ITEMS = [
-  { id: 'voll_33_rot',     section: 'Voll', label: '33 kg Rot',     color: 'rot',    size: '33kg'  },
-  { id: 'voll_33_grau',    section: 'Voll', label: '33 kg Grau',    color: 'grau',   size: '33kg'  },
-  { id: 'voll_11_alu',     section: 'Voll', label: '11 kg Alu',     color: 'alu',    size: '11kg'  },
-  { id: 'voll_11_grau',    section: 'Voll', label: '11 kg Grau',    color: 'grau',   size: '11kg'  },
-  { id: 'voll_82_schwarz', section: 'Voll', label: '8,2 kg Schwarz',color: 'schwarz',size: '8.2kg' },
-  { id: 'voll_5_grau',     section: 'Voll', label: '5 kg Grau',     color: 'grau',   size: '5kg'   },
-  { id: 'leer_33_rot',     section: 'Leer', label: '33 kg Rot',     color: 'rot',    size: '33kg'  },
-  { id: 'leer_33_grau',    section: 'Leer', label: '33 kg Grau',    color: 'grau',   size: '33kg'  },
-  { id: 'leer_11_alu',     section: 'Leer', label: '11 kg Alu',     color: 'alu',    size: '11kg'  },
-  { id: 'leer_11_grau',    section: 'Leer', label: '11 kg Grau',    color: 'grau',   size: '11kg'  },
-  { id: 'leer_82_schwarz', section: 'Leer', label: '8,2 kg Schwarz',color: 'schwarz',size: '8.2kg' },
-  { id: 'leer_5_grau',     section: 'Leer', label: '5 kg Grau',     color: 'grau',   size: '5kg'   },
+  { id: 'voll_33_rot',     section: 'Voll', label: '33 kg Rot',     photo: 'Gasflaschenbilder/rot 33kg.webp'       },
+  { id: 'voll_33_grau',    section: 'Voll', label: '33 kg Grau',    photo: 'Gasflaschenbilder/grau 33kg.jpg'       },
+  { id: 'voll_11_alu',     section: 'Voll', label: '11 kg Alu',     photo: 'Gasflaschenbilder/Alu 11kg.webp'       },
+  { id: 'voll_11_grau',    section: 'Voll', label: '11 kg Grau',    photo: 'Gasflaschenbilder/grau 11kg.webp'      },
+  { id: 'voll_82_schwarz', section: 'Voll', label: '8,2 kg Schwarz',photo: 'Gasflaschenbilder/schwarz 8,2kg.webp'  },
+  { id: 'voll_5_grau',     section: 'Voll', label: '5 kg Grau',     photo: 'Gasflaschenbilder/grau 5kg.webp'       },
+  { id: 'leer_33_rot',     section: 'Leer', label: '33 kg Rot',     photo: 'Gasflaschenbilder/rot 33kg.webp'       },
+  { id: 'leer_33_grau',    section: 'Leer', label: '33 kg Grau',    photo: 'Gasflaschenbilder/grau 33kg.jpg'       },
+  { id: 'leer_11_alu',     section: 'Leer', label: '11 kg Alu',     photo: 'Gasflaschenbilder/Alu 11kg.webp'       },
+  { id: 'leer_11_grau',    section: 'Leer', label: '11 kg Grau',    photo: 'Gasflaschenbilder/grau 11kg.webp'      },
+  { id: 'leer_82_schwarz', section: 'Leer', label: '8,2 kg Schwarz',photo: 'Gasflaschenbilder/schwarz 8,2kg.webp'  },
+  { id: 'leer_5_grau',     section: 'Leer', label: '5 kg Grau',     photo: 'Gasflaschenbilder/grau 5kg.webp'       },
 ];
 
 const STORAGE_KEY = 'gaslager_history';
@@ -55,28 +42,6 @@ let historyEntries = [];
 // ============================================================
 // SVG CYLINDER GENERATOR
 // ============================================================
-
-function cylinderSVG(colorKey, sizeKey) {
-  const c  = COLORS[colorKey];
-  const { h, rx } = SIZES[sizeKey];
-  const ry     = Math.round(rx * 0.38);
-  const cx     = 50;
-  const topY   = 40;
-  const totalH = topY + h + ry + 18;
-  const maxPx  = Math.min(totalH * 1.15, 195);
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 ${totalH}" style="height:${maxPx}px;width:auto">
-    <rect x="${cx - 15}" y="4" width="30" height="7" rx="3.5" fill="#6b7280"/>
-    <rect x="${cx - 6}" y="8" width="12" height="24" rx="3" fill="#4b5563"/>
-    <ellipse cx="${cx}" cy="${topY}" rx="${rx}" ry="${ry}" fill="${c.cap}"/>
-    <rect x="${cx - rx}" y="${topY}" width="13" height="${h}" fill="${c.shadow}"/>
-    <rect x="${cx - rx + 13}" y="${topY}" width="${rx * 2 - 13}" height="${h}" fill="${c.main}"/>
-    <rect x="${cx - rx + 3}" y="${topY + 10}" width="7" height="${h - 20}" rx="3.5" fill="${c.hi}"/>
-    <ellipse cx="${cx}" cy="${topY + h}" rx="${rx}" ry="${ry}" fill="${c.shadow}"/>
-    <rect x="${cx - rx - 3}" y="${topY + h - ry}" width="${rx * 2 + 6}" height="${ry + 13}" rx="3" fill="${c.cap}"/>
-    <ellipse cx="${cx}" cy="${topY + h + 13}" rx="${rx + 3}" ry="${Math.round(ry * 0.65)}" fill="${c.cap}"/>
-  </svg>`;
-}
 
 // ============================================================
 // SCREEN MANAGEMENT
@@ -125,7 +90,7 @@ function renderCountScreen() {
   body.className = 'screen active count-bg-' + item.section.toLowerCase();
 
   document.getElementById('item-title').textContent  = item.label;
-  document.getElementById('cylinder-wrap').innerHTML = cylinderSVG(item.color, item.size);
+  document.getElementById('cylinder-wrap').innerHTML = `<img src="${item.photo}" alt="${item.label}" style="height:195px;width:auto;object-fit:contain">`;
   document.getElementById('counter-val').textContent = counts[item.id];
 }
 
