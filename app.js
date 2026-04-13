@@ -5,7 +5,7 @@
 const EMAILJS_PUBLIC_KEY  = 'mpco4Q9eqZW5qPdz_';
 const EMAILJS_SERVICE_ID  = 'service_5yw7qxm';
 const EMAILJS_TEMPLATE_ID = 'template_pqksn3n';
-const EMAIL_TO            = 'buero@uhlenkoeper-camp.de';
+const EMAIL_TO            = 'info@uhlenkoeper-camp.de';
 
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
