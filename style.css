@@ -14,6 +14,10 @@
   --red-bg:      #fee2e2;
   --red-text:    #991b1b;
   --red-border:  #dc2626;
+  --teal:        #0f766e;
+  --teal-dark:   #115e59;
+  --teal-bg:     #ccfbf1;
+  --teal-text:   #115e59;
   --radius:      16px;
 }
 
@@ -59,6 +63,15 @@ html, body {
   margin-bottom: 12px;
 }
 
+.mode-block {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
 .btn-huge {
   width: 100%;
   max-width: 320px;
@@ -76,6 +89,9 @@ html, body {
 .btn-huge:active { background: var(--blue-dark); transform: scale(0.98); }
 .btn-huge:disabled { opacity: 0.6; }
 
+.btn-huge-muell { background: var(--teal); box-shadow: 0 4px 20px rgba(15,118,110,0.35); }
+.btn-huge-muell:active { background: var(--teal-dark); }
+
 .btn-ghost {
   background: none;
   border: 2px solid var(--border);
@@ -90,8 +106,9 @@ html, body {
 .btn-ghost:active { border-color: var(--blue); color: var(--blue); }
 
 /* ── COUNT SCREEN BACKGROUND ────────────────── */
-.count-bg-voll { background: #f0fdf4; }
-.count-bg-leer { background: #fff5f5; }
+.count-bg-voll  { background: #f0fdf4; }
+.count-bg-leer  { background: #fff5f5; }
+.count-bg-muell { background: var(--bg); }
 
 /* ── COUNT TOP ──────────────────────────────── */
 .count-top {
@@ -177,6 +194,7 @@ html, body {
 }
 .section-badge.voll { background: var(--green-bg); color: var(--green-text); border: 2px solid var(--green-border); font-weight: 900; }
 .section-badge.leer { background: var(--red-bg);   color: var(--red-text);   border: 2px solid var(--red-border);   font-weight: 900; }
+.section-badge.muell{ background: var(--teal-bg);  color: var(--teal-text);  border: 2px solid var(--teal);         font-weight: 900; }
 
 .item-title {
   font-size: 1.9rem;
@@ -184,15 +202,28 @@ html, body {
   text-align: center;
 }
 
-.cylinder-wrap {
+.item-media {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 12px;
   min-height: 140px;
+  width: 100%;
 }
-.cylinder-wrap svg {
+.item-photo {
+  max-height: 195px;
+  max-width: 100%;
+  width: auto;
+  object-fit: contain;
   filter: drop-shadow(0 8px 18px rgba(0,0,0,0.18));
+}
+.company-logo {
+  max-height: 38px;
+  max-width: 150px;
+  width: auto;
+  object-fit: contain;
 }
 
 .counter-row {
@@ -292,8 +323,22 @@ html, body {
   border: 1px solid var(--border);
   cursor: pointer;
 }
-.summary-row.voll { border-left: 4px solid var(--green-border); }
-.summary-row.leer { border-left: 4px solid var(--red-border); }
+.summary-row.voll  { border-left: 4px solid var(--green-border); }
+.summary-row.leer  { border-left: 4px solid var(--red-border); }
+.summary-row.muell { border-left: 4px solid var(--teal); }
+.summary-row-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.summary-row-logo {
+  height: 22px;
+  width: auto;
+  max-width: 54px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
 .summary-row-label { font-size: 1rem; font-weight: 500; }
 .summary-row-count { font-size: 1.3rem; font-weight: 800; color: var(--blue); }
 

@@ -13,8 +13,7 @@ emailjs.init(EMAILJS_PUBLIC_KEY);
 // DATA
 // ============================================================
 
-
-const ITEMS = [
+const GAS_ITEMS = [
   { id: 'voll_33_rot',     section: 'Voll', label: '33 kg Rot',     photo: 'Gasflaschenbilder/rot 33kg.webp'       },
   { id: 'voll_33_grau',    section: 'Voll', label: '33 kg Grau',    photo: 'Gasflaschenbilder/grau 33kg.jpg'       },
   { id: 'voll_11_alu',     section: 'Voll', label: '11 kg Alu',     photo: 'Gasflaschenbilder/Alu 11kg.webp'       },
@@ -29,19 +28,68 @@ const ITEMS = [
   { id: 'leer_5_grau',     section: 'Leer', label: '5 kg Grau',     photo: 'Gasflaschenbilder/grau 5kg.webp'       },
 ];
 
-const STORAGE_KEY = 'gaslager_history';
+const LOGO_AWB    = 'Müll Bilder/AWB_logo.png';
+const LOGO_KEWITZ = 'Müll Bilder/kewitz_logo.jpeg';
+
+const MUELL_ITEMS = [
+  { id: 'restmuell_awb_240',    label: 'Restmüll AWB 240 L',        photo: 'Müll Bilder/restmuell 240l.png',                          logo: LOGO_AWB    },
+  { id: 'restmuell_kewitz_660', label: 'Restmüll Kewitz 660 L',     photo: 'Müll Bilder/restmüll_container660l.jpg',                  logo: LOGO_KEWITZ },
+  { id: 'restmuell_kewitz_240', label: 'Restmüll Kewitz 240 L',     photo: 'Müll Bilder/restmuell 240l.png',                          logo: LOGO_KEWITZ },
+  { id: 'papier_blau_240',      label: 'Papier blaue Tonne 240 L',  photo: 'Müll Bilder/blaue_tonne.png'                                                },
+  { id: 'papier_karton',        label: 'Papier in Kartons bzw. cbm',photo: 'Müll Bilder/karton_cbm.webp'                                               },
+  { id: 'gelbe_tonne_1100',     label: 'Gelbe Tonne 1100 L',        photo: 'Müll Bilder/Gelbe Tonne Container 660l.webp'                              },
+  { id: 'gelbe_tonne_240',      label: 'Gelbe Tonne 240 L',         photo: 'Müll Bilder/GelbeTonne-240l-freigestellt__scaled__300_386.jpg'            },
+  { id: 'biomuell_120',         label: 'Biomüll 120 L',             photo: 'Müll Bilder/biotonne.jpg'                                                  },
+  { id: 'glas_kisten',          label: 'Glas in Kisten',            photo: 'Müll Bilder/Glas.png'                                                      },
+  { id: 'elektro_sonder',       label: 'Elektro- / Sonder-Müll',    photo: 'Müll Bilder/elektroschrott.webp'                                           },
+  { id: 'fett',                 label: 'Fett'                                                                                                          },
+];
+
+const MODES = {
+  gas: {
+    id:         'gas',
+    title:      'Gaslager',
+    badge:      null,               // Badge kommt aus item.section
+    sections:   ['Voll', 'Leer'],
+    items:      GAS_ITEMS,
+    storageKey: 'gaslager_history',
+    emailTitle: 'Gaslager Inventur',
+    emailTo:    EMAIL_TO,
+  },
+  muell: {
+    id:         'muell',
+    title:      'Müll',
+    badge:      'MÜLL',             // feste Beschriftung, keine Voll/Leer-Trennung
+    sections:   null,
+    items:      MUELL_ITEMS,
+    storageKey: 'muell_history',
+    emailTitle: 'Müll Inventur',
+    emailTo:    EMAIL_TO,
+  },
+};
 
 // ============================================================
 // STATE
 // ============================================================
 
+let currentMode    = MODES.gas;
+let historyMode    = MODES.gas;   // Modus der gerade angezeigten Historie
+let detailMode     = MODES.gas;   // Modus des geöffneten Historien-Eintrags
 let currentStep    = 0;
 let counts         = {};
 let historyEntries = [];
 
 // ============================================================
-// SVG CYLINDER GENERATOR
+// HELPERS
 // ============================================================
+
+function imgSrc(path) {
+  return encodeURI(path);
+}
+
+function sectionClass(mode, item) {
+  return mode.sections ? item.section.toLowerCase() : 'muell';
+}
 
 // ============================================================
 // SCREEN MANAGEMENT
@@ -57,41 +105,58 @@ function showScreen(id) {
 // HOME
 // ============================================================
 
-document.getElementById('btn-start').addEventListener('click', () => {
-  counts = {};
-  ITEMS.forEach(item => { counts[item.id] = 0; });
+function startCounting(mode) {
+  currentMode = mode;
+  counts      = {};
+  mode.items.forEach(item => { counts[item.id] = 0; });
   currentStep = 0;
   renderCountScreen();
   showScreen('screen-count');
-});
+}
 
-document.getElementById('btn-history').addEventListener('click', () => {
-  loadHistory();
+function openHistory(mode) {
+  historyMode = mode;
+  document.getElementById('history-title').textContent = 'Letzte – ' + mode.title;
+  loadHistory(mode);
   renderHistoryList();
   showScreen('screen-history');
-});
+}
+
+document.getElementById('btn-start-gas')  .addEventListener('click', () => startCounting(MODES.gas));
+document.getElementById('btn-start-muell').addEventListener('click', () => startCounting(MODES.muell));
+document.getElementById('btn-history-gas')  .addEventListener('click', () => openHistory(MODES.gas));
+document.getElementById('btn-history-muell').addEventListener('click', () => openHistory(MODES.muell));
 
 // ============================================================
 // COUNT
 // ============================================================
 
 function renderCountScreen() {
-  const item  = ITEMS[currentStep];
-  const total = ITEMS.length;
+  const mode  = currentMode;
+  const item  = mode.items[currentStep];
+  const total = mode.items.length;
 
   document.getElementById('progress-fill').style.width  = `${((currentStep + 1) / total) * 100}%`;
   document.getElementById('progress-label').textContent = `${currentStep + 1} / ${total}`;
 
+  const cls   = sectionClass(mode, item);
   const badge = document.getElementById('section-badge');
-  badge.textContent = item.section.toUpperCase();
-  badge.className   = 'section-badge ' + item.section.toLowerCase();
+  badge.textContent = mode.badge || item.section.toUpperCase();
+  badge.className   = 'section-badge ' + cls;
 
-  const body = document.getElementById('screen-count');
-  body.className = 'screen active count-bg-' + item.section.toLowerCase();
+  document.getElementById('screen-count').className = 'screen active count-bg-' + cls;
+  document.getElementById('item-title').textContent = item.label;
 
-  document.getElementById('item-title').textContent  = item.label;
-  document.getElementById('cylinder-wrap').innerHTML = `<img src="${item.photo}" alt="${item.label}" style="height:195px;width:auto;object-fit:contain">`;
-  document.getElementById('counter-val').textContent = counts[item.id];
+  let media = '';
+  if (item.logo) {
+    media += `<img class="company-logo" src="${imgSrc(item.logo)}" alt="">`;
+  }
+  if (item.photo) {
+    media += `<img class="item-photo" src="${imgSrc(item.photo)}" alt="${item.label}">`;
+  }
+  document.getElementById('item-media').innerHTML = media;
+
+  document.getElementById('counter-val').textContent = counts[item.id] ?? 0;
 }
 
 document.getElementById('count-back').addEventListener('click', () => {
@@ -103,13 +168,16 @@ document.getElementById('count-back').addEventListener('click', () => {
   }
 });
 
-document.getElementById('btn-list').addEventListener('click', () => {
-  renderSummaryInto(document.getElementById('summary-body'), counts, true);
+function openSummary() {
+  document.getElementById('summary-title').textContent = 'Übersicht – ' + currentMode.title;
+  renderSummaryInto(document.getElementById('summary-body'), currentMode, counts, true);
   showScreen('screen-summary');
-});
+}
+
+document.getElementById('btn-list').addEventListener('click', openSummary);
 
 document.getElementById('btn-minus').addEventListener('click', () => {
-  const item = ITEMS[currentStep];
+  const item = currentMode.items[currentStep];
   if (counts[item.id] > 0) {
     counts[item.id]--;
     document.getElementById('counter-val').textContent = counts[item.id];
@@ -117,18 +185,17 @@ document.getElementById('btn-minus').addEventListener('click', () => {
 });
 
 document.getElementById('btn-plus').addEventListener('click', () => {
-  const item = ITEMS[currentStep];
+  const item = currentMode.items[currentStep];
   counts[item.id]++;
   document.getElementById('counter-val').textContent = counts[item.id];
 });
 
 document.getElementById('btn-next').addEventListener('click', () => {
-  if (currentStep < ITEMS.length - 1) {
+  if (currentStep < currentMode.items.length - 1) {
     currentStep++;
     renderCountScreen();
   } else {
-    renderSummaryInto(document.getElementById('summary-body'), counts, true);
-    showScreen('screen-summary');
+    openSummary();
   }
 });
 
@@ -136,22 +203,32 @@ document.getElementById('btn-next').addEventListener('click', () => {
 // SUMMARY
 // ============================================================
 
-function renderSummaryInto(container, countsData, clickable = false) {
+function renderSummaryInto(container, mode, countsData, clickable = false) {
   container.innerHTML = '';
-  ['Voll', 'Leer'].forEach(sec => {
-    const title = document.createElement('div');
-    title.className   = 'summary-section-title ' + sec.toLowerCase();
-    title.textContent = sec === 'Voll' ? 'VOLL' : 'LEER';
-    container.appendChild(title);
 
-    ITEMS.filter(i => i.section === sec).forEach(item => {
-      const row     = document.createElement('div');
-      row.className = 'summary-row ' + sec.toLowerCase();
-      row.innerHTML = `<span class="summary-row-label">${item.label}</span>
+  // Ohne Abschnitte (Müll) wird eine einzige, flache Liste gerendert.
+  const sections = mode.sections || [null];
+
+  sections.forEach(sec => {
+    if (sec) {
+      const title = document.createElement('div');
+      title.className   = 'summary-section-title ' + sec.toLowerCase();
+      title.textContent = sec.toUpperCase();
+      container.appendChild(title);
+    }
+
+    mode.items.filter(i => !sec || i.section === sec).forEach(item => {
+      const cls = sectionClass(mode, item);
+      const row = document.createElement('div');
+      row.className = 'summary-row ' + cls;
+      row.innerHTML = `<span class="summary-row-main">
+                         ${item.logo ? `<img class="summary-row-logo" src="${imgSrc(item.logo)}" alt="">` : ''}
+                         <span class="summary-row-label">${item.label}</span>
+                       </span>
                        <span class="summary-row-count">${countsData[item.id] ?? 0}</span>`;
       if (clickable) {
         row.addEventListener('click', () => {
-          currentStep = ITEMS.indexOf(item);
+          currentStep = mode.items.indexOf(item);
           renderCountScreen();
           showScreen('screen-count');
         });
@@ -162,13 +239,14 @@ function renderSummaryInto(container, countsData, clickable = false) {
 }
 
 document.getElementById('summary-back').addEventListener('click', () => {
-  currentStep = ITEMS.length - 1;
+  currentStep = currentMode.items.length - 1;
   renderCountScreen();
   showScreen('screen-count');
 });
 
 document.getElementById('btn-send').addEventListener('click', async () => {
-  const btn = document.getElementById('btn-send');
+  const btn  = document.getElementById('btn-send');
+  const mode = currentMode;
   btn.disabled    = true;
   btn.textContent = 'Wird gesendet…';
 
@@ -177,14 +255,15 @@ document.getElementById('btn-send').addEventListener('click', async () => {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
 
-    // In localStorage speichern
-    saveToHistory({ date: dateStr, timestamp: Date.now(), counts: { ...counts } });
+    // In localStorage speichern (pro Bereich getrennt)
+    saveToHistory(mode, { date: dateStr, timestamp: Date.now(), mode: mode.id, counts: { ...counts } });
 
-    // E-Mail senden
+    // E-Mail senden – gleiches EmailJS-Template für beide Bereiche,
+    // nur der Text unterscheidet sich (Betreff wird im Template gesetzt).
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      to_email: EMAIL_TO,
+      to_email: mode.emailTo,
       date:     dateStr,
-      message:  buildEmailText(dateStr, counts),
+      message:  buildEmailText(mode, dateStr, counts),
     });
 
     showToast('Erfolgreich gesendet.');
@@ -198,30 +277,32 @@ document.getElementById('btn-send').addEventListener('click', async () => {
   }
 });
 
-function buildEmailText(dateStr, countsData) {
-  let msg = `Gaslager Inventur – ${dateStr}\n\n`;
-  ['Voll', 'Leer'].forEach(sec => {
-    msg += `${sec.toUpperCase()}:\n`;
-    ITEMS.filter(i => i.section === sec).forEach(item => {
-      msg += `  ${item.label}: ${countsData[item.id] ?? 0}\n`;
+function buildEmailText(mode, dateStr, countsData) {
+  let msg = `${mode.emailTitle} – ${dateStr}\n\n`;
+
+  (mode.sections || [null]).forEach(sec => {
+    if (sec) msg += `${sec.toUpperCase()}:\n`;
+    mode.items.filter(i => !sec || i.section === sec).forEach(item => {
+      msg += `${sec ? '  ' : ''}${item.label}: ${countsData[item.id] ?? 0}\n`;
     });
     msg += '\n';
   });
+
   return msg;
 }
 
 // ============================================================
-// HISTORY (localStorage)
+// HISTORY (localStorage, pro Bereich getrennt)
 // ============================================================
 
-function saveToHistory(entry) {
-  const existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+function saveToHistory(mode, entry) {
+  const existing = JSON.parse(localStorage.getItem(mode.storageKey) || '[]');
   existing.unshift(entry);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+  localStorage.setItem(mode.storageKey, JSON.stringify(existing));
 }
 
-function loadHistory() {
-  historyEntries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+function loadHistory(mode) {
+  historyEntries = JSON.parse(localStorage.getItem(mode.storageKey) || '[]');
 }
 
 function renderHistoryList() {
@@ -239,8 +320,9 @@ function renderHistoryList() {
     card.innerHTML = `<span class="history-card-date">${entry.date}</span>
                       <span class="history-card-arrow">&#8250;</span>`;
     card.addEventListener('click', () => {
+      detailMode = MODES[entry.mode] || historyMode;
       document.getElementById('detail-title').textContent = entry.date;
-      renderSummaryInto(document.getElementById('detail-body'), entry.counts);
+      renderSummaryInto(document.getElementById('detail-body'), detailMode, entry.counts);
       showScreen('screen-history-detail');
     });
     body.appendChild(card);
