@@ -9,7 +9,7 @@ const EMAIL_TO            = 'info@uhlenkoeper-camp.de';
 
 // Google-Apps-Script-Web-App für das Abfallprotokoll.
 // Siehe apps-script/EINRICHTUNG.md – hier die /exec-URL eintragen.
-const GOOGLE_SCRIPT_URL = '';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzf_Rx3jvDZrlV1eMc0jeOPq3KRFEWmwPjF4U2GHs7TlbKX6s9aAmjqlukHsZNZ5_QJ-Q/exec';
 
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
