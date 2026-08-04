@@ -260,6 +260,11 @@ html, body {
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
+/* "0,25 cbm" braucht mehr Platz als eine blanke Zahl */
+.counter-val.with-unit {
+  font-size: 1.9rem;
+  min-width: 130px;
+}
 
 /* ── COUNT BOTTOM ───────────────────────────── */
 .count-bottom {

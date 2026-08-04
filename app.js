@@ -7,6 +7,10 @@ const EMAILJS_SERVICE_ID  = 'service_5yw7qxm';
 const EMAILJS_TEMPLATE_ID = 'template_pqksn3n';
 const EMAIL_TO            = 'info@uhlenkoeper-camp.de';
 
+// Google-Apps-Script-Web-App für das Abfallprotokoll.
+// Siehe apps-script/EINRICHTUNG.md – hier die /exec-URL eintragen.
+const GOOGLE_SCRIPT_URL = '';
+
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
 // ============================================================
@@ -36,13 +40,26 @@ const MUELL_ITEMS = [
   { id: 'restmuell_kewitz_660', label: 'Restmüll Kewitz 660 L',     photo: 'Müll Bilder/restmüll_container660l.jpg',                  logo: LOGO_KEWITZ },
   { id: 'restmuell_kewitz_240', label: 'Restmüll Kewitz 240 L',     photo: 'Müll Bilder/restmuell 240l.png',                          logo: LOGO_KEWITZ },
   { id: 'papier_blau_240',      label: 'Papier blaue Tonne 240 L',  photo: 'Müll Bilder/blaue_tonne.png'                                                },
-  { id: 'papier_karton',        label: 'Papier in Kartons bzw. cbm',photo: 'Müll Bilder/karton_cbm.webp'                                               },
+  { id: 'papier_karton',        label: 'Papier / Kartons in cbm',   photo: 'Müll Bilder/karton_cbm.webp', step: 0.25, unit: 'cbm'                     },
   { id: 'gelbe_tonne_1100',     label: 'Gelbe Tonne 1100 L',        photo: 'Müll Bilder/Gelbe Tonne Container 660l.webp'                              },
   { id: 'gelbe_tonne_240',      label: 'Gelbe Tonne 240 L',         photo: 'Müll Bilder/GelbeTonne-240l-freigestellt__scaled__300_386.jpg'            },
   { id: 'biomuell_120',         label: 'Biomüll 120 L',             photo: 'Müll Bilder/biotonne.jpg'                                                  },
   { id: 'glas_kisten',          label: 'Glas in Kisten',            photo: 'Müll Bilder/Glas.png'                                                      },
   { id: 'elektro_sonder',       label: 'Elektro- / Sonder-Müll',    photo: 'Müll Bilder/elektroschrott.webp'                                           },
   { id: 'fett',                 label: 'Fett'                                                                                                          },
+];
+
+// Spalten des Abfallprotokolls (Excel). Die App zählt Behälter,
+// die Tabelle führt Liter – hier findet die Umrechnung statt.
+// "Elektro- / Sonder-Müll" und "Fett" stehen bewusst nur im Mailtext.
+const EXCEL_COLUMNS = [
+  { header: 'Restmüll in Liter (AWB)',      value: n => n('restmuell_awb_240')    * 240                                 },
+  { header: 'Restmüll in Litern (Kewitz)',  value: n => n('restmuell_kewitz_660') * 660 + n('restmuell_kewitz_240') * 240 },
+  { header: 'Papier blaue Tonne 240l',      value: n => n('papier_blau_240')      * 240                                 },
+  { header: 'Kartons in Liter (umrechnen)', value: n => n('papier_karton')        * 1000                                },
+  { header: 'Gelbe Säcke in Liter',         value: n => n('gelbe_tonne_1100')     * 1100 + n('gelbe_tonne_240')    * 240 },
+  { header: 'Bioabfall in Liter',           value: n => n('biomuell_120')         * 120                                 },
+  { header: 'Glas in Kisten',               value: n => n('glas_kisten')                                                },
 ];
 
 const MODES = {
@@ -65,6 +82,7 @@ const MODES = {
     storageKey: 'muell_history',
     emailTitle: 'Müll Inventur',
     emailTo:    EMAIL_TO,
+    toSheet:    true,               // zusätzlich ins Google-Abfallprotokoll eintragen
   },
 };
 
@@ -85,6 +103,20 @@ let historyEntries = [];
 
 function imgSrc(path) {
   return encodeURI(path);
+}
+
+// Zählwert anzeigen: ganze Zahlen schlicht, Bruchschritte mit Komma und Einheit.
+function formatCount(item, value) {
+  const num = Number(value ?? 0);
+  const str = Number.isInteger(num)
+    ? String(num)
+    : num.toFixed(2).replace(/0$/, '').replace('.', ',');
+  return item.unit ? `${str} ${item.unit}` : str;
+}
+
+function isoDate(d) {
+  const pad = v => String(v).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 function sectionClass(mode, item) {
@@ -156,7 +188,18 @@ function renderCountScreen() {
   }
   document.getElementById('item-media').innerHTML = media;
 
-  document.getElementById('counter-val').textContent = counts[item.id] ?? 0;
+  const val = document.getElementById('counter-val');
+  val.textContent = formatCount(item, counts[item.id]);
+  val.classList.toggle('with-unit', Boolean(item.unit));
+}
+
+function changeCount(delta) {
+  const item = currentMode.items[currentStep];
+  const step = item.step || 1;
+  const next = Math.round(((counts[item.id] ?? 0) + delta * step) * 100) / 100;
+  if (next < 0) return;
+  counts[item.id] = next;
+  document.getElementById('counter-val').textContent = formatCount(item, next);
 }
 
 document.getElementById('count-back').addEventListener('click', () => {
@@ -176,19 +219,8 @@ function openSummary() {
 
 document.getElementById('btn-list').addEventListener('click', openSummary);
 
-document.getElementById('btn-minus').addEventListener('click', () => {
-  const item = currentMode.items[currentStep];
-  if (counts[item.id] > 0) {
-    counts[item.id]--;
-    document.getElementById('counter-val').textContent = counts[item.id];
-  }
-});
-
-document.getElementById('btn-plus').addEventListener('click', () => {
-  const item = currentMode.items[currentStep];
-  counts[item.id]++;
-  document.getElementById('counter-val').textContent = counts[item.id];
-});
+document.getElementById('btn-minus').addEventListener('click', () => changeCount(-1));
+document.getElementById('btn-plus') .addEventListener('click', () => changeCount(+1));
 
 document.getElementById('btn-next').addEventListener('click', () => {
   if (currentStep < currentMode.items.length - 1) {
@@ -225,7 +257,7 @@ function renderSummaryInto(container, mode, countsData, clickable = false) {
                          ${item.logo ? `<img class="summary-row-logo" src="${imgSrc(item.logo)}" alt="">` : ''}
                          <span class="summary-row-label">${item.label}</span>
                        </span>
-                       <span class="summary-row-count">${countsData[item.id] ?? 0}</span>`;
+                       <span class="summary-row-count">${formatCount(item, countsData[item.id])}</span>`;
       if (clickable) {
         row.addEventListener('click', () => {
           currentStep = mode.items.indexOf(item);
@@ -251,15 +283,23 @@ document.getElementById('btn-send').addEventListener('click', async () => {
   btn.textContent = 'Wird gesendet…';
 
   try {
-    const dateStr = new Date().toLocaleDateString('de-DE', {
+    const now     = new Date();
+    const dateStr = now.toLocaleDateString('de-DE', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
 
     // In localStorage speichern (pro Bereich getrennt)
-    saveToHistory(mode, { date: dateStr, timestamp: Date.now(), mode: mode.id, counts: { ...counts } });
+    saveToHistory(mode, { date: dateStr, timestamp: now.getTime(), mode: mode.id, counts: { ...counts } });
 
-    // E-Mail senden – gleiches EmailJS-Template für beide Bereiche,
-    // nur der Text unterscheidet sich (Betreff wird im Template gesetzt).
+    // Müll wandert zusätzlich ins Google-Abfallprotokoll. Zuerst eintragen –
+    // schlägt das fehl, wird auch keine Mail verschickt und man kann die
+    // Zählung unverändert erneut senden.
+    if (mode.toSheet) {
+      await sendToSheet(mode, now, dateStr);
+    }
+
+    // Gleiches EmailJS-Template für beide Bereiche, nur der Text
+    // unterscheidet sich (Betreff wird im Template gesetzt).
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
       to_email: mode.emailTo,
       date:     dateStr,
@@ -270,12 +310,40 @@ document.getElementById('btn-send').addEventListener('click', async () => {
     showScreen('screen-home');
   } catch (err) {
     console.error(err);
-    showToast('Fehler. Bitte erneut versuchen.');
+    showToast(err.message === 'NO_SCRIPT_URL'
+      ? 'Google-Tabelle noch nicht eingerichtet.'
+      : 'Fehler. Bitte erneut versuchen.');
   } finally {
     btn.disabled    = false;
     btn.textContent = 'Fertig, senden';
   }
 });
+
+// Trägt die Zählung ins Abfallprotokoll ein; das Apps Script hängt die
+// Zeile an, aktualisiert die Summe und verschickt die Mail mit Excel-Anhang.
+async function sendToSheet(mode, now, dateStr) {
+  if (!GOOGLE_SCRIPT_URL) throw new Error('NO_SCRIPT_URL');
+
+  const num     = id => Number(counts[id] ?? 0);
+  const payload = {
+    date:    isoDate(now),
+    year:    now.getFullYear(),
+    headers: EXCEL_COLUMNS.map(col => col.header),
+    values:  EXCEL_COLUMNS.map(col => col.value(num)),
+    subject: `${mode.emailTitle} – ${dateStr}`,
+    message: buildEmailText(mode, dateStr, counts),
+  };
+
+  // text/plain vermeidet den CORS-Preflight, den Apps Script nicht beantwortet.
+  const res = await fetch(GOOGLE_SCRIPT_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body:    JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'Unbekannter Fehler');
+}
 
 function buildEmailText(mode, dateStr, countsData) {
   let msg = `${mode.emailTitle} – ${dateStr}\n\n`;
@@ -283,7 +351,7 @@ function buildEmailText(mode, dateStr, countsData) {
   (mode.sections || [null]).forEach(sec => {
     if (sec) msg += `${sec.toUpperCase()}:\n`;
     mode.items.filter(i => !sec || i.section === sec).forEach(item => {
-      msg += `${sec ? '  ' : ''}${item.label}: ${countsData[item.id] ?? 0}\n`;
+      msg += `${sec ? '  ' : ''}${item.label}: ${formatCount(item, countsData[item.id])}\n`;
     });
     msg += '\n';
   });
