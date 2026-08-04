@@ -7,12 +7,17 @@ Der Ablauf beim Senden einer Müllzählung:
 
 1. Die Zeile wird ins Jahresblatt der Tabelle eingetragen, die Summenzeile
    aktualisiert.
-2. Google verschickt eine Mail mit der kompletten Tabelle als **Excel-Anhang**.
-3. Die App verschickt wie bisher ihre **Textmail über EmailJS**.
+2. Google verschickt die Mail – derselbe Text wie bisher, dazu die komplette
+   Tabelle als **Excel-Anhang**.
 
-Das sind zwei Mails pro Zählung. Willst du nur eine, setze im Skript
-`MAIL_MIT_ANHANG = false` (dann bleibt nur die gewohnte Textmail, die Tabelle
-steht weiterhin im Sheet und wird nicht mehr verschickt).
+Die EmailJS-Textmail ist für Müll **pausiert**, weil der Versand über Google
+läuft und sonst zwei Mails pro Zählung ankämen. Der Code dafür ist nicht
+entfernt: in `app.js` bei `MODES.muell` steht `emailJs: false` – auf `true`
+setzen, und die Textmail geht zusätzlich wieder mit raus.
+
+Umgekehrt schaltet `MAIL_MIT_ANHANG = false` in `Code.gs` den Mailversand über
+Google ab; die Tabelle wird dann weiter gefüllt, aber nicht mehr verschickt.
+Beide Schalter zugleich auf „aus" hieße: keine Mail mehr.
 
 Die Gaszählung ist von alldem nicht betroffen und läuft unverändert über
 EmailJS.

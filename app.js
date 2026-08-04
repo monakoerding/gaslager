@@ -72,6 +72,7 @@ const MODES = {
     storageKey: 'gaslager_history',
     emailTitle: 'Gaslager Inventur',
     emailTo:    EMAIL_TO,
+    emailJs:    true,
   },
   muell: {
     id:         'muell',
@@ -82,7 +83,10 @@ const MODES = {
     storageKey: 'muell_history',
     emailTitle: 'Müll Inventur',
     emailTo:    EMAIL_TO,
-    toSheet:    true,               // zusätzlich ins Google-Abfallprotokoll eintragen
+    toSheet:    true,               // ins Google-Abfallprotokoll eintragen
+    // Pausiert: Google verschickt die Mail bereits mit Excel-Anhang.
+    // Auf true setzen, um die EmailJS-Textmail wieder mitzuschicken.
+    emailJs:    false,
   },
 };
 
@@ -291,20 +295,21 @@ document.getElementById('btn-send').addEventListener('click', async () => {
     // In localStorage speichern (pro Bereich getrennt)
     saveToHistory(mode, { date: dateStr, timestamp: now.getTime(), mode: mode.id, counts: { ...counts } });
 
-    // Müll wandert zusätzlich ins Google-Abfallprotokoll. Zuerst eintragen –
-    // schlägt das fehl, wird auch keine Mail verschickt und man kann die
-    // Zählung unverändert erneut senden.
+    // Müll geht ins Google-Abfallprotokoll; von dort kommt auch die Mail mit
+    // Excel-Anhang. Schlägt das Eintragen fehl, bricht der Versand ab und die
+    // Zählung kann unverändert erneut gesendet werden.
     if (mode.toSheet) {
       await sendToSheet(mode, now, dateStr);
     }
 
-    // Gleiches EmailJS-Template für beide Bereiche, nur der Text
-    // unterscheidet sich (Betreff wird im Template gesetzt).
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      to_email: mode.emailTo,
-      date:     dateStr,
-      message:  buildEmailText(mode, dateStr, counts),
-    });
+    // Textmail über EmailJS – derzeit nur für Gas, siehe emailJs in MODES.
+    if (mode.emailJs) {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: mode.emailTo,
+        date:     dateStr,
+        message:  buildEmailText(mode, dateStr, counts),
+      });
+    }
 
     showToast('Erfolgreich gesendet.');
     showScreen('screen-home');
