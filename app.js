@@ -46,7 +46,7 @@ const MUELL_ITEMS = [
   { id: 'biomuell_120',         label: 'Biomüll 120 L',             photo: 'Müll Bilder/biotonne.jpg'                                                  },
   { id: 'glas_kisten',          label: 'Glas in Kisten',            photo: 'Müll Bilder/Glas.png'                                                      },
   { id: 'elektro_sonder',       label: 'Elektro- / Sonder-Müll',    photo: 'Müll Bilder/elektroschrott.webp'                                           },
-  { id: 'fett',                 label: 'Fett'                                                                                                          },
+  { id: 'fett',                 label: 'Fett in Liter',             photo: 'Müll Bilder/fett.png', step: 10, unit: 'L'                          },
 ];
 
 // Spalten des Abfallprotokolls (Excel). Die App zählt Behälter,
