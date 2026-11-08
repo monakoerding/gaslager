@@ -1,5 +1,7 @@
 # Abfallprotokoll einrichten (einmalig, ca. 10 Minuten)
 
+Die zusätzliche Zählerstandserfassung nutzt dasselbe Script-Projekt. Ihre einmalige Aktivierung mit Drive-Speicher und Sammel-E-Mail ist unter [Zählerstände einrichten](ZAEHLERSTAENDE.md) beschrieben.
+
 Jede Müllzählung wird zusätzlich in ein Google Sheet eingetragen. Das Sheet ist
 damit immer vollständig – egal, wer auf welchem Gerät zählt.
 

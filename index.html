@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Inventur</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="meters.css">
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
@@ -20,6 +21,10 @@
       <div class="mode-block">
         <button id="btn-start-muell" class="btn-huge btn-huge-muell">Müll zählen</button>
         <button id="btn-history-muell" class="btn-ghost">Letzte Müll-Zählungen</button>
+      </div>
+      <div class="mode-block">
+        <button id="btn-start-meters" class="btn-huge">Zählerstände erfassen</button>
+        <button id="btn-history-meters" class="btn-ghost">Letzte Ablesungen</button>
       </div>
     </div>
   </div>
@@ -79,9 +84,63 @@
     <div id="detail-body" class="summary-body"></div>
   </div>
 
+  <!-- ZÄHLERSTÄNDE -->
+  <section id="screen-meters" class="screen" aria-labelledby="meters-title">
+    <div class="screen-header">
+      <button class="btn-back" id="meters-back" aria-label="Zur Startseite">&#8592;</button>
+      <h2 id="meters-title">Zählerstände</h2>
+    </div>
+    <form id="meters-form" class="meters-form">
+      <p class="meters-intro">Zähler ablesen, Foto aufnehmen und zur Erfassung hinzufügen.</p>
+      <fieldset id="meters-fields" disabled>
+        <label for="meters-type">Zählerart</label>
+        <select id="meters-type"><option value="strom">Strom · kWh</option><option value="wasser">Wasser · m³</option><option value="gas">Gas · m³</option></select>
+        <label for="meters-name">Zählernummer / Standort</label>
+        <input id="meters-name" maxlength="80" required placeholder="z. B. Stellplatz 12 / Z-104">
+        <label for="meters-date">Ablesedatum</label>
+        <input id="meters-date" type="date" required>
+        <label for="meters-value">Zählerstand <span id="meters-unit">(kWh)</span></label>
+        <input id="meters-value" inputmode="decimal" maxlength="20" required placeholder="z. B. 1234,56" aria-describedby="meters-value-hint">
+        <p id="meters-value-hint" class="meters-hint">Komma oder Punkt für Nachkommastellen, ohne Tausendertrennzeichen.</p>
+        <label for="meters-photo">Foto des Zählers</label>
+        <input id="meters-photo" type="file" accept="image/*" capture="environment" required aria-describedby="meters-photo-hint">
+        <p id="meters-photo-hint" class="meters-hint">Foto aufnehmen oder auswählen (max. 15 MB). Das Bild wird zum Speichern verkleinert.</p>
+        <img id="meters-preview" class="meters-photo" alt="Vorschau des ausgewählten Zählerfotos" hidden>
+        <label for="meters-note">Notiz (optional)</label>
+        <textarea id="meters-note" rows="2" maxlength="500" placeholder="z. B. Ablesung bei Abreise"></textarea>
+        <button type="submit" class="btn-next">Ablesung hinzufügen</button>
+      </fieldset>
+      <p id="meters-form-status" class="meters-status" role="status" aria-live="polite">Lokalen Speicher öffnen …</p>
+    </form>
+    <div class="screen-footer"><button id="meters-to-summary" class="btn-ghost" disabled>Zur Übersicht</button></div>
+  </section>
+
+  <section id="screen-meter-summary" class="screen" aria-labelledby="meters-summary-title">
+    <div class="screen-header"><button id="meters-summary-back" class="btn-back" aria-label="Zurück">&#8592;</button><h2 id="meters-summary-title">Übersicht – Zählerstände</h2></div>
+    <div class="summary-body">
+      <p class="meters-hint">Prüfe alle Ablesungen. „Fertig, senden“ speichert die gesamte Erfassung zentral und sendet eine gemeinsame E-Mail mit Übersicht und Fotos an info@uhlenkoeper-camp.de.</p>
+      <div id="meters-summary-list" class="meters-records"></div>
+      <button id="meters-add-another" class="btn-ghost">Weitere Ablesung hinzufügen</button>
+      <p id="meters-send-status" class="meters-status" role="status" aria-live="polite"></p>
+    </div>
+    <div class="screen-footer"><button id="meters-send" class="btn-huge">Fertig, senden</button></div>
+  </section>
+
+  <section id="screen-meter-history" class="screen" aria-labelledby="meters-history-title">
+    <div class="screen-header"><button id="meters-history-back" class="btn-back" aria-label="Zur Startseite">&#8592;</button><h2 id="meters-history-title">Letzte – Zählerstände</h2></div>
+    <div class="history-body"><p class="meters-hint">Hier erscheinen die Erfassungen aus diesem Browser. Abgeschlossene Werte und Fotos liegen zusätzlich im geschützten Camp-Speicher.</p><div id="meters-history-list" class="meters-records"></div></div>
+  </section>
+
+  <section id="screen-meter-detail" class="screen" aria-labelledby="meters-detail-title">
+    <div class="screen-header"><button id="meters-detail-back" class="btn-back" aria-label="Zum Verlauf">&#8592;</button><h2 id="meters-detail-title">Ablesung</h2></div>
+    <div class="summary-body"><p id="meters-detail-status" class="meters-status"></p><div id="meters-detail-list" class="meters-records"></div></div>
+    <div class="screen-footer"><button id="meters-resume" class="btn-next" hidden>Erfassung fortsetzen</button></div>
+  </section>
+
   <!-- TOAST -->
   <div id="toast" class="toast"></div>
 
   <script src="app.js"></script>
+  <script src="meters.js"></script>
 </body>
 </html>

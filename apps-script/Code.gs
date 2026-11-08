@@ -23,7 +23,10 @@ const ERSTE_DATEN_ZEILE = 4;
 // WEB-APP-ENDPUNKTE
 // ============================================================
 
-function doGet() {
+function doGet(e) {
+  if (e && e.parameter && e.parameter.feature === 'meters') {
+    return alsJson({ ok: true, feature: 'meter-readings', version: 1 });
+  }
   return ContentService.createTextOutput(
     'Abfallprotokoll-Endpunkt ist aktiv. Zählungen werden per POST entgegengenommen.'
   );
@@ -32,6 +35,11 @@ function doGet() {
 function doPost(e) {
   try {
     const daten = JSON.parse(e.postData.contents);
+    // Separate route: meter photos must never become waste-protocol rows.
+    if (daten.kind === 'meter-readings' || daten.kind === 'meter-status') {
+      if (e.postData.contents.length > 12 * 1024 * 1024) return alsJson({ ok: false, error: 'Die Erfassung ist zu groß.' });
+      return alsJson(daten.kind === 'meter-status' ? zaehlerStatus(daten) : zaehlerEmpfangen(daten));
+    }
     const blatt = jahresBlatt(daten.year, daten.headers);
 
     // Beim erneuten Senden derselben Zählung (z.B. nachdem die Mail
