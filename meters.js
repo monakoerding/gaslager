@@ -272,7 +272,7 @@
         setDate();
         resetPhoto();
         $('meters-unit').textContent = '(kWh)';
-        showToast('Zählerstände gespeichert und E-Mail übergeben.');
+        showToast('Gespeichert und übergeben.');
         showScreen('screen-home');
       } else message('meters-send-status', result.message || statusNames[result.status], true);
     } catch (error) { message('meters-send-status', `${error.message} Deine lokalen Ablesungen bleiben erhalten.`, true); }
